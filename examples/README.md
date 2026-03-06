@@ -10,6 +10,26 @@ These examples answer the question: *"What does it actually look like when the f
 
 ## Contents
 
+### [identity-trust-demo.md](./identity-trust-demo.md)
+
+**What:** A non-technical walkthrough of agent identity and trust verification, designed for executives, product managers, and compliance officers.
+
+**The scenario:** AI agents are executing stock trades, accessing patient records, and deploying software. The demo walks through *why* agents need cryptographic identity, *how* the verification process works step by step, and *what happens* when a compromised agent tries to act — all using real-world analogies (passports, credit scores, security cameras, power of attorney).
+
+**Sections:**
+| Section | What It Covers |
+|---------|---------------|
+| The One-Sentence Problem | Why this matters in plain language |
+| The Four Building Blocks | Identity, Trust, Evidence, Delegation — with analogies |
+| See It in Action | Step-by-step trade execution (pass) and compromised agent (blocked) |
+| Real Business Scenarios | Finance, healthcare, deployment, B2B |
+| The Numbers That Matter | Executive-level metrics |
+| Common Questions | FAQ for stakeholders |
+
+**Key takeaway:** The entire verification process takes 10-50 milliseconds. Agents don't notice. Users don't notice. But the audit trail is complete and tamper-proof.
+
+---
+
 ### [nexus-spatial-discovery.md](./nexus-spatial-discovery.md)
 
 **What:** A complete product discovery exercise where 8 agents worked in parallel to evaluate a software opportunity and produce a unified plan.
