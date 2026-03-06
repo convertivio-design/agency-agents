@@ -52,7 +52,7 @@ python3 -m http.server 8080 --directory examples
 
 ### [marketing-campaign-demo.html](./marketing-campaign-demo.html)
 
-**What:** An interactive campaign simulator showing all 8 marketing agents collaborating on a real campaign — from strategy to content to measurable results.
+**What:** A full-funnel marketing operations simulator showing the complete machinery behind a B2B campaign — from ad click to closed deal, with agent decision logs, lead scoring, automation workflows, and multi-touch attribution.
 
 **How to run:**
 ```bash
@@ -62,24 +62,30 @@ python3 -m http.server 8080 --directory examples
 # then visit http://localhost:8080/marketing-campaign-demo.html
 ```
 
-**Four campaign scenarios:**
-| Scenario | What It Demonstrates |
-|----------|---------------------|
-| Product Launch | 6-week SaaS launch across all channels — blog, threads, TikTok, Reddit, referral loops |
-| Viral Growth | Maximum reach in minimum time — trend-jacking, meme strategy, conversion funnels |
-| Community Trust | 6-month authentic Reddit presence — from silent observation to 24K karma and AMA |
-| App Store Launch | ASO, screenshot A/B testing, coordinated launch day, ratings strategy |
+**What this demonstrates (the full marketing automation stack, not just content):**
+| Area | What You See |
+|------|-------------|
+| Integration nodes | 10 connected systems (HubSpot CRM, SendGrid, Google Ads, Meta Ads, Segment+Mixpanel, Stripe, Slack, Tracking Pixels, Clearbit, Calendly) with live sync status |
+| Agent decision logs | 20+ timestamped log entries showing reasoning: audience segmentation, ad campaign configs with bid strategies, A/B test statistical significance, funnel leak detection, lead score calculations |
+| Lead pipeline | 6 individual leads tracked from anonymous visitor to closed-won/lost with score progression, stage changes, and every touchpoint |
+| Lead scoring | Full score breakdowns: source (+10), blog read (+10), whitepaper (+15), company size (+10), pricing visits (+7), email engagement (+5) with MQL threshold triggers |
+| Nurture sequences | 7-step email sequence with per-step open/click rates, branching logic (opened + pricing visit → fast-track), A/B test winner promotion |
+| SDR handoff | MQL → Clearbit enrichment → ICP scoring → SDR round-robin → 3-touch outreach → SQL qualification with SLA monitoring |
+| Retargeting | Pixel events → intent segmentation → creative matching → frequency capping → real-time suppression → lookalike expansion |
+| Attribution | Linear model by channel with pipeline value, CAC, and LTV:CAC per channel |
+| Revenue events | Deal-by-deal revenue timeline including a lost deal routed to win-back nurture |
+| Conversion paths | Full multi-touch journeys for 2 closed deals (every touchpoint from first ad click to contract signed) |
+| Funnel | Live visualization: Visitors 48.2K → Leads 4.8K → MQL 342 → SQL 89 → Opp 34 → Won 12 |
 
-**Features:**
-- Live agent roster showing which agents activate during each campaign phase
-- Animated campaign timeline tracking progress through strategy → content → launch → optimize
-- Content preview cards showing actual platform-specific outputs (tweets, TikTok scripts, Reddit posts, Instagram carousels, blog articles)
-- Real-time metrics dashboard with animated counters (impressions, engagement rate, sign-ups, CAC, viral K-factor)
-- Platform-specific styling (Twitter blue, Reddit orange, TikTok, Instagram, LinkedIn, App Store)
+**Key agent logs that show deep expertise:**
+- Ads agent detects CTR drop → diagnoses cause → pauses underperformer → promotes winner → adds negative keywords → adjusts bid targeting
+- Email agent runs A/B test → reports z-test confidence at 99.2% → promotes winner → applies pattern to future sequences
+- Growth agent runs referral timing experiment (n=2,400) → 181% lift → ships to 100% → projects $30K/month ad spend savings
+- CRM agent promotes MQL with full score breakdown → triggers Slack alert → assigns SDR with SLA → fast-tracks nurture → updates retargeting audience → pulls Clearbit enrichment
+- Analytics agent performs signup-to-activation cohort analysis → identifies integration step as 35% drop-off → recommends product + marketing + growth actions
+- Social strategist ranks channels by pipeline-per-dollar → recommends budget reallocation with specific dollar amounts
 
-**Agents featured:** Growth Hacker, Content Creator, Twitter Engager, TikTok Strategist, Instagram Curator, Reddit Community Builder, App Store Optimizer, Social Media Strategist
-
-**Key takeaway:** Non-technical stakeholders can watch 8 specialized agents collaborate on a campaign in real time — seeing the actual content each produces, which platforms it targets, and the measurable business results.
+**Key takeaway:** This demonstrates the full marketing automation stack — not "a bot that writes tweets" but a system that tracks 48K visitors through a funnel, scores and nurtures leads, optimizes ad spend in real-time, hands off to sales with context, and attributes $847K in pipeline to specific channels with CAC and LTV ratios.
 
 ---
 
