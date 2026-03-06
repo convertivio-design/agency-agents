@@ -28,6 +28,28 @@ These examples answer the question: *"What does it actually look like when the f
 
 **Key takeaway:** The entire verification process takes 10-50 milliseconds. Agents don't notice. Users don't notice. But the audit trail is complete and tamper-proof.
 
+### [identity-trust-demo.html](./identity-trust-demo.html)
+
+**What:** An interactive web demo of agent identity verification — zero dependencies, just open the HTML file in a browser.
+
+**How to run:** Download and double-click the file, or:
+```bash
+open examples/identity-trust-demo.html
+# or serve it:
+python3 -m http.server 8080 --directory examples
+# then visit http://localhost:8080/identity-trust-demo.html
+```
+
+**Features:**
+- Four clickable scenarios: authorized trade, compromised agent, expired delegation, scope escalation
+- Animated step-by-step verification with per-check timing
+- Live trust score meters and agent identity cards
+- Visual delegation chain showing scope narrowing
+- Tamper-evident evidence chain that builds record by record
+- Running totals: actions verified, actions blocked, evidence records, verification latency
+
+**Key takeaway:** Non-technical stakeholders can click "Run Verification" and watch the system prove identity, check authorization, and block unauthorized actions in real time — all in under 50ms.
+
 ---
 
 ### [nexus-spatial-discovery.md](./nexus-spatial-discovery.md)

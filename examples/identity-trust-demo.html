@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Identity &amp; Trust — Interactive Demo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242835;
+    --border: #2e3345;
+    --text: #e2e4eb;
+    --text2: #8b8fa3;
+    --accent: #6c5ce7;
+    --accent2: #a29bfe;
+    --green: #00b894;
+    --green-bg: #00b89418;
+    --red: #ff6b6b;
+    --red-bg: #ff6b6b18;
+    --yellow: #fdcb6e;
+    --yellow-bg: #fdcb6e18;
+    --blue: #74b9ff;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #1a1d2780, transparent);
+  }
+  header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+  header p { color: var(--text2); margin-top: 0.5rem; max-width: 560px; margin-inline: auto; font-size: 0.95rem; }
+
+  .container { max-width: 1080px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* Scenario selector */
+  .scenario-bar {
+    display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center;
+    margin-bottom: 2rem;
+  }
+  .scenario-btn {
+    padding: 0.55rem 1.1rem; border-radius: 99px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text2); cursor: pointer;
+    font-size: 0.85rem; transition: all 0.2s;
+  }
+  .scenario-btn:hover { border-color: var(--accent); color: var(--text); }
+  .scenario-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Agent cards */
+  .agents-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .agent-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem; position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .agent-card.active-agent { border-color: var(--accent); box-shadow: 0 0 20px #6c5ce730; }
+  .agent-card.blocked { border-color: var(--red); box-shadow: 0 0 20px #ff6b6b20; }
+  .agent-avatar {
+    width: 44px; height: 44px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+  .agent-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+  .agent-meta { font-size: 0.78rem; color: var(--text2); }
+  .agent-meta span { display: block; margin-top: 0.15rem; }
+  .trust-badge {
+    position: absolute; top: 1rem; right: 1rem; font-size: 0.7rem;
+    padding: 0.2rem 0.55rem; border-radius: 99px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .trust-high { background: var(--green-bg); color: var(--green); }
+  .trust-moderate { background: var(--yellow-bg); color: var(--yellow); }
+  .trust-low { background: var(--red-bg); color: var(--red); }
+
+  /* Trust meter */
+  .trust-meter {
+    height: 4px; border-radius: 4px; background: var(--surface2);
+    margin-top: 0.75rem; overflow: hidden;
+  }
+  .trust-meter-fill {
+    height: 100%; border-radius: 4px; transition: width 0.6s ease, background 0.6s;
+  }
+
+  /* Verification panel */
+  .verify-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem;
+  }
+  .verify-header {
+    padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .verify-header h2 { font-size: 1rem; font-weight: 600; }
+  .run-btn {
+    padding: 0.5rem 1.3rem; border-radius: 99px; border: none;
+    background: var(--accent); color: #fff; font-size: 0.85rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .run-btn:hover { background: #5b4bd5; }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .verify-body { padding: 1.25rem; }
+
+  /* Steps */
+  .step {
+    display: flex; gap: 1rem; padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border); opacity: 0.3;
+    transition: opacity 0.4s;
+  }
+  .step:last-child { border-bottom: none; }
+  .step.visible { opacity: 1; }
+  .step-icon {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; background: var(--surface2); color: var(--text2);
+    transition: all 0.3s;
+  }
+  .step-icon.pass { background: var(--green-bg); color: var(--green); }
+  .step-icon.fail { background: var(--red-bg); color: var(--red); }
+  .step-icon.running { background: var(--accent); color: #fff; animation: pulse 0.8s infinite alternate; }
+  @keyframes pulse { to { opacity: 0.5; } }
+  .step-body { flex: 1; min-width: 0; }
+  .step-title { font-size: 0.88rem; font-weight: 600; }
+  .step-detail { font-size: 0.8rem; color: var(--text2); margin-top: 0.15rem; }
+  .step-time {
+    font-size: 0.72rem; color: var(--text2); margin-top: 0.25rem;
+    font-family: 'SF Mono', Menlo, monospace;
+  }
+
+  /* Result banner */
+  .result-banner {
+    margin-top: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 0.9rem; display: none; align-items: center; gap: 0.75rem;
+  }
+  .result-banner.show { display: flex; }
+  .result-banner.success { background: var(--green-bg); color: var(--green); border: 1px solid #00b89440; }
+  .result-banner.failure { background: var(--red-bg); color: var(--red); border: 1px solid #ff6b6b40; }
+  .result-detail { font-weight: 400; font-size: 0.82rem; opacity: 0.85; }
+
+  /* Evidence chain */
+  .evidence-section { margin-bottom: 2rem; }
+  .evidence-section h2 {
+    font-size: 1rem; font-weight: 600; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .evidence-chain {
+    display: flex; gap: 0; overflow-x: auto; padding-bottom: 0.5rem;
+    scroll-behavior: smooth;
+  }
+  .evidence-record {
+    flex-shrink: 0; width: 240px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 1rem; font-size: 0.78rem; position: relative;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.4s, transform 0.4s, border-color 0.3s;
+  }
+  .evidence-record.visible { opacity: 1; transform: translateY(0); }
+  .evidence-record.tampered { border-color: var(--red); }
+  .evidence-record .rec-agent { font-weight: 600; margin-bottom: 0.35rem; }
+  .evidence-record .rec-action { color: var(--accent2); }
+  .evidence-record .rec-hash {
+    font-family: 'SF Mono', Menlo, monospace; font-size: 0.68rem;
+    color: var(--text2); margin-top: 0.5rem; word-break: break-all;
+  }
+  .evidence-record .rec-time { color: var(--text2); margin-top: 0.2rem; }
+  .chain-link {
+    display: flex; align-items: center; flex-shrink: 0;
+    color: var(--text2); font-size: 1.1rem; padding: 0 0.25rem;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .chain-link.visible { opacity: 1; }
+  .chain-link.broken { color: var(--red); }
+
+  /* Delegation visualization */
+  .delegation-viz {
+    display: flex; align-items: center; gap: 0; justify-content: center;
+    margin-bottom: 2rem; flex-wrap: wrap;
+  }
+  .deleg-node {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.75rem 1rem;
+    text-align: center; font-size: 0.82rem; min-width: 150px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .deleg-node.origin { border-color: var(--accent); }
+  .deleg-node.target { border-color: var(--blue); }
+  .deleg-node.bad { border-color: var(--red); box-shadow: 0 0 12px #ff6b6b20; }
+  .deleg-node strong { display: block; font-size: 0.88rem; }
+  .deleg-node .scope-tag {
+    display: inline-block; margin-top: 0.35rem; padding: 0.15rem 0.5rem;
+    border-radius: 99px; font-size: 0.7rem; background: var(--surface2);
+    color: var(--text2);
+  }
+  .deleg-arrow {
+    color: var(--text2); font-size: 1.2rem; padding: 0 0.4rem;
+    transition: color 0.3s;
+  }
+  .deleg-arrow.bad { color: var(--red); }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 1rem; text-align: center;
+  }
+  .stat-value { font-size: 1.5rem; font-weight: 700; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.blue { color: var(--blue); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-label { font-size: 0.75rem; color: var(--text2); margin-top: 0.25rem; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.3rem; }
+    .agents-row { grid-template-columns: 1fr; }
+    .delegation-viz { flex-direction: column; }
+    .deleg-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Agent Identity &amp; Trust</h1>
+  <p>See how AI agents prove who they are, verify each other, and create tamper-proof records — in real time.</p>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value green" id="stat-verified">0</div>
+      <div class="stat-label">Actions Verified</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value red" id="stat-blocked">0</div>
+      <div class="stat-label">Actions Blocked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value blue" id="stat-evidence">0</div>
+      <div class="stat-label">Evidence Records</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value yellow" id="stat-latency">—</div>
+      <div class="stat-label">Verification Time</div>
+    </div>
+  </div>
+
+  <!-- Scenario selector -->
+  <div class="scenario-bar">
+    <button class="scenario-btn active" data-scenario="trade">Stock Trade (Pass)</button>
+    <button class="scenario-btn" data-scenario="compromised">Compromised Agent</button>
+    <button class="scenario-btn" data-scenario="expired">Expired Delegation</button>
+    <button class="scenario-btn" data-scenario="escalation">Scope Escalation</button>
+  </div>
+
+  <!-- Agent cards -->
+  <div class="agents-row" id="agents-row"></div>
+
+  <!-- Delegation chain viz -->
+  <div class="delegation-viz" id="delegation-viz"></div>
+
+  <!-- Verification panel -->
+  <div class="verify-panel">
+    <div class="verify-header">
+      <h2 id="verify-title">Verification Steps</h2>
+      <button class="run-btn" id="run-btn">Run Verification</button>
+    </div>
+    <div class="verify-body" id="verify-body"></div>
+    <div style="padding: 0 1.25rem 1.25rem;">
+      <div class="result-banner" id="result-banner"></div>
+    </div>
+  </div>
+
+  <!-- Evidence chain -->
+  <div class="evidence-section">
+    <h2>Evidence Chain</h2>
+    <div class="evidence-chain" id="evidence-chain"></div>
+  </div>
+
+</div>
+
+<script>
+const SCENARIOS = {
+  trade: {
+    title: "Stock Trade — Authorized Execution",
+    agents: [
+      { id: "portfolio-mgr-2b1e", name: "Portfolio Manager", icon: "briefcase", bg: "#6c5ce720", trust: 0.97, level: "high", scopes: ["portfolio.*", "trade.initiate"], env: "production" },
+      { id: "trading-agent-7a3f", name: "Trading Agent", icon: "chart", bg: "#00b89420", trust: 0.94, level: "high", scopes: ["trade.execute", "market.read"], env: "production" },
+      { id: "market-access-4c1d", name: "Market Access", icon: "globe", bg: "#74b9ff20", trust: 0.88, level: "moderate", scopes: ["market.order.limit"], env: "production" },
+    ],
+    delegation: [
+      { from: "Portfolio Manager", to: "Trading Agent", scope: "trade.execute", status: "ok" },
+      { from: "Trading Agent", to: "Market Access", scope: "market.order.limit", status: "ok" },
+    ],
+    action: "Buy 500 shares AAPL @ market",
+    steps: [
+      { name: "Identity Verification", detail: "Cryptographic signature verified against certificate chain", pass: true, ms: 2.1 },
+      { name: "Credential Expiry", detail: "Credential valid — expires in 89 days", pass: true, ms: 0.3 },
+      { name: "Scope Check", detail: "trade.execute is within granted scopes", pass: true, ms: 0.4 },
+      { name: "Trust Score", detail: "Score: 0.94 (HIGH) — threshold: 0.90 — 847 verified outcomes", pass: true, ms: 1.2 },
+      { name: "Delegation Chain", detail: "2-link chain verified — all signatures valid, scopes narrow correctly", pass: true, ms: 3.8 },
+      { name: "Evidence Record", detail: "Record #12848 created — linked to previous hash a1b2c3…", pass: true, ms: 4.1 },
+    ],
+    result: { success: true, text: "Action Authorized", detail: "Trade executed. 500 AAPL filled @ $187.42. Total verification: 11.9ms." },
+    evidence: [
+      { agent: "Portfolio Mgr", action: "trade.initiate", hash: "a1b2c3d4", time: "14:32:05" },
+      { agent: "Trading Agent", action: "trade.execute", hash: "e5f6a7b8", time: "14:32:07", highlight: true },
+      { agent: "Market Access", action: "market.order", hash: "c9d0e1f2", time: "14:32:07" },
+    ],
+  },
+  compromised: {
+    title: "Compromised Agent — Stolen Credential",
+    agents: [
+      { id: "portfolio-mgr-2b1e", name: "Portfolio Manager", icon: "briefcase", bg: "#6c5ce720", trust: 0.97, level: "high", scopes: ["portfolio.*", "trade.initiate"], env: "production" },
+      { id: "trading-agent-7a3f", name: "Trading Agent", icon: "skull", bg: "#ff6b6b20", trust: 0.94, level: "high", scopes: ["trade.execute", "market.read"], env: "production", compromised: true },
+      { id: "market-access-4c1d", name: "Market Access", icon: "globe", bg: "#74b9ff20", trust: 0.88, level: "moderate", scopes: ["market.order.limit"], env: "production" },
+    ],
+    delegation: [
+      { from: "Portfolio Manager", to: "Trading Agent", scope: "trade.execute", status: "bad" },
+      { from: "Trading Agent", to: "Market Access", scope: "market.order.limit", status: "bad" },
+    ],
+    action: "Buy 10,000 shares TSLA @ market",
+    steps: [
+      { name: "Identity Verification", detail: "Signature verified — but credential was revoked 10 minutes ago", pass: false, ms: 2.3 },
+      { name: "Credential Expiry", detail: "Check skipped — identity verification failed", pass: false, ms: 0, skip: true },
+      { name: "Scope Check", detail: "Check skipped — identity verification failed", pass: false, ms: 0, skip: true },
+      { name: "Trust Score", detail: "Check skipped — identity verification failed", pass: false, ms: 0, skip: true },
+      { name: "Delegation Chain", detail: "Check skipped — identity verification failed", pass: false, ms: 0, skip: true },
+      { name: "Evidence Record", detail: "Blocked attempt recorded — alert sent to security team", pass: true, ms: 3.9 },
+    ],
+    result: { success: false, text: "Action Blocked", detail: "Revoked credential detected. Trade rejected. Security team alerted. Attempt logged as evidence record #12849." },
+    evidence: [
+      { agent: "Portfolio Mgr", action: "trade.initiate", hash: "a1b2c3d4", time: "14:32:05" },
+      { agent: "Trading Agent", action: "BLOCKED", hash: "f3a4b5c6", time: "14:45:12", highlight: true, blocked: true },
+    ],
+  },
+  expired: {
+    title: "Expired Delegation — Stale Authorization",
+    agents: [
+      { id: "portfolio-mgr-2b1e", name: "Portfolio Manager", icon: "briefcase", bg: "#6c5ce720", trust: 0.97, level: "high", scopes: ["portfolio.*", "trade.initiate"], env: "production" },
+      { id: "trading-agent-7a3f", name: "Trading Agent", icon: "chart", bg: "#fdcb6e20", trust: 0.91, level: "high", scopes: ["trade.execute", "market.read"], env: "production" },
+    ],
+    delegation: [
+      { from: "Portfolio Manager", to: "Trading Agent", scope: "trade.execute (EXPIRED 3 min ago)", status: "bad" },
+    ],
+    action: "Sell 200 shares MSFT @ market",
+    steps: [
+      { name: "Identity Verification", detail: "Cryptographic signature verified — valid credential", pass: true, ms: 2.0 },
+      { name: "Credential Expiry", detail: "Agent credential valid — expires in 89 days", pass: true, ms: 0.3 },
+      { name: "Scope Check", detail: "trade.execute is within granted scopes", pass: true, ms: 0.4 },
+      { name: "Trust Score", detail: "Score: 0.91 (HIGH) — above threshold", pass: true, ms: 1.1 },
+      { name: "Delegation Chain", detail: "Delegation expired 3 minutes ago — Portfolio Manager's authorization is no longer valid", pass: false, ms: 3.2 },
+      { name: "Evidence Record", detail: "Blocked attempt recorded with expired delegation reference", pass: true, ms: 3.8 },
+    ],
+    result: { success: false, text: "Action Blocked", detail: "Delegation expired. The agent's identity is valid, but its authorization is stale. A fresh delegation from Portfolio Manager is required." },
+    evidence: [
+      { agent: "Portfolio Mgr", action: "delegation.issue", hash: "a1b2c3d4", time: "14:15:00" },
+      { agent: "Trading Agent", action: "BLOCKED", hash: "d7e8f9a0", time: "14:33:22", highlight: true, blocked: true },
+    ],
+  },
+  escalation: {
+    title: "Scope Escalation — Unauthorized Broadening",
+    agents: [
+      { id: "portfolio-mgr-2b1e", name: "Portfolio Manager", icon: "briefcase", bg: "#6c5ce720", trust: 0.97, level: "high", scopes: ["portfolio.*", "trade.initiate"], env: "production" },
+      { id: "trading-agent-7a3f", name: "Trading Agent", icon: "chart", bg: "#fdcb6e20", trust: 0.92, level: "high", scopes: ["trade.execute", "market.read"], env: "production" },
+      { id: "rogue-sub-agent", name: "Sub-Agent", icon: "warning", bg: "#ff6b6b20", trust: 0.45, level: "low", scopes: ["market.order.*"], env: "production" },
+    ],
+    delegation: [
+      { from: "Portfolio Manager", to: "Trading Agent", scope: "trade.execute.limit", status: "ok" },
+      { from: "Trading Agent", to: "Sub-Agent", scope: "trade.execute.* (WIDER)", status: "bad" },
+    ],
+    action: "Execute market order (not limit) via Sub-Agent",
+    steps: [
+      { name: "Identity Verification", detail: "Sub-Agent identity verified — valid credential", pass: true, ms: 2.4 },
+      { name: "Credential Expiry", detail: "Credential valid — expires in 14 days", pass: true, ms: 0.3 },
+      { name: "Scope Check", detail: "trade.execute.* requested but only trade.execute.limit was delegated", pass: false, ms: 0.5 },
+      { name: "Trust Score", detail: "Check skipped — scope check failed", pass: false, ms: 0, skip: true },
+      { name: "Delegation Chain", detail: "Scope escalation detected — child scope is WIDER than parent (trade.execute.* > trade.execute.limit)", pass: false, ms: 3.6 },
+      { name: "Evidence Record", detail: "Scope escalation attempt recorded — flagged for security review", pass: true, ms: 4.0 },
+    ],
+    result: { success: false, text: "Action Blocked — Scope Escalation", detail: "Trading Agent tried to grant broader permissions than it received. Scopes can only narrow, never widen. This is the #1 delegation attack vector." },
+    evidence: [
+      { agent: "Portfolio Mgr", action: "delegation.issue", hash: "a1b2c3d4", time: "14:30:00" },
+      { agent: "Trading Agent", action: "delegation.issue", hash: "b5c6d7e8", time: "14:30:01" },
+      { agent: "Sub-Agent", action: "ESCALATION BLOCKED", hash: "f9a0b1c2", time: "14:30:02", highlight: true, blocked: true },
+    ],
+  },
+};
+
+const ICONS = {
+  briefcase: "\ud83d\udcbc",
+  chart: "\ud83d\udcc8",
+  globe: "\ud83c\udf10",
+  skull: "\ud83d\udd13",
+  warning: "\u26a0\ufe0f",
+};
+
+let currentScenario = "trade";
+let running = false;
+let stats = { verified: 0, blocked: 0, evidence: 0 };
+
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+function renderAgents(agents) {
+  const row = $("#agents-row");
+  row.innerHTML = agents.map(a => `
+    <div class="agent-card" id="card-${a.id}" ${a.compromised ? 'style="border-color:#ff6b6b40"' : ''}>
+      <div class="trust-badge trust-${a.level}">${a.level}</div>
+      <div class="agent-avatar" style="background:${a.bg}">${ICONS[a.icon]}</div>
+      <h3>${a.name}</h3>
+      <div class="agent-meta">
+        <span>${a.compromised ? "\ud83d\udd34 Credential Revoked" : "\ud83d\udfe2 " + a.env}</span>
+        <span>Scopes: ${a.scopes.join(", ")}</span>
+      </div>
+      <div class="trust-meter">
+        <div class="trust-meter-fill" style="width:${a.trust*100}%;background:${a.trust>=0.9?'var(--green)':a.trust>=0.5?'var(--yellow)':'var(--red)'}"></div>
+      </div>
+      <div style="font-size:0.72rem;color:var(--text2);margin-top:0.35rem;text-align:right">Trust: ${a.trust.toFixed(2)}</div>
+    </div>
+  `).join("");
+}
+
+function renderDelegation(chain) {
+  const viz = $("#delegation-viz");
+  if (!chain.length) { viz.innerHTML = ""; return; }
+  let html = "";
+  chain.forEach((d, i) => {
+    if (i === 0) html += `<div class="deleg-node ${d.status === 'ok' ? 'origin' : 'bad'}"><strong>${d.from}</strong><span class="scope-tag">delegator</span></div>`;
+    html += `<div class="deleg-arrow ${d.status === 'bad' ? 'bad' : ''}">\u2192</div>`;
+    html += `<div class="deleg-node ${d.status === 'bad' ? 'bad' : 'target'}"><strong>${d.to}</strong><span class="scope-tag">${d.scope}</span></div>`;
+  });
+  viz.innerHTML = html;
+}
+
+function renderSteps(steps) {
+  const body = $("#verify-body");
+  body.innerHTML = steps.map((s, i) => `
+    <div class="step" id="step-${i}">
+      <div class="step-icon" id="step-icon-${i}">${i + 1}</div>
+      <div class="step-body">
+        <div class="step-title">${s.name}</div>
+        <div class="step-detail">${s.detail}</div>
+        ${s.skip ? '' : `<div class="step-time" id="step-time-${i}"></div>`}
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderEvidence(records) {
+  const chain = $("#evidence-chain");
+  let html = "";
+  records.forEach((r, i) => {
+    if (i > 0) html += `<div class="chain-link" id="elink-${i}">\u2192</div>`;
+    html += `
+      <div class="evidence-record ${r.blocked ? 'tampered' : ''}" id="erec-${i}">
+        <div class="rec-agent">${r.blocked ? "\ud83d\uded1" : "\ud83d\udcdd"} ${r.agent}</div>
+        <div class="rec-action">${r.action}</div>
+        <div class="rec-time">${r.time} UTC</div>
+        <div class="rec-hash">hash: ${r.hash}…</div>
+      </div>
+    `;
+  });
+  chain.innerHTML = html;
+}
+
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runVerification() {
+  if (running) return;
+  running = true;
+  const btn = $("#run-btn");
+  btn.disabled = true;
+  btn.textContent = "Running…";
+
+  const sc = SCENARIOS[currentScenario];
+  const banner = $("#result-banner");
+  banner.className = "result-banner";
+  banner.style.display = "none";
+
+  $$(".evidence-record").forEach(el => { el.classList.remove("visible"); });
+  $$(".chain-link").forEach(el => { el.classList.remove("visible"); });
+
+  let totalMs = 0;
+
+  for (let i = 0; i < sc.steps.length; i++) {
+    const step = sc.steps[i];
+    const el = $(`#step-${i}`);
+    const icon = $(`#step-icon-${i}`);
+    const timeEl = $(`#step-time-${i}`);
+
+    el.classList.add("visible");
+
+    if (step.skip) {
+      icon.className = "step-icon fail";
+      icon.textContent = "—";
+      await sleep(200);
+      continue;
+    }
+
+    icon.className = "step-icon running";
+    icon.textContent = "⟳";
+    await sleep(500 + Math.random() * 400);
+
+    if (step.pass) {
+      icon.className = "step-icon pass";
+      icon.textContent = "✓";
+    } else {
+      icon.className = "step-icon fail";
+      icon.textContent = "✗";
+    }
+
+    totalMs += step.ms;
+    if (timeEl) timeEl.textContent = `${step.ms.toFixed(1)}ms`;
+
+    await sleep(300);
+  }
+
+  if (sc.result.success) {
+    stats.verified++;
+    $("#stat-verified").textContent = stats.verified;
+  } else {
+    stats.blocked++;
+    $("#stat-blocked").textContent = stats.blocked;
+  }
+  $("#stat-latency").textContent = totalMs.toFixed(1) + "ms";
+
+  banner.className = `result-banner show ${sc.result.success ? "success" : "failure"}`;
+  banner.innerHTML = `<span>${sc.result.success ? "✓" : "✗"} ${sc.result.text}</span><span class="result-detail">${sc.result.detail}</span>`;
+
+  for (let i = 0; i < sc.evidence.length; i++) {
+    stats.evidence++;
+    $("#stat-evidence").textContent = stats.evidence;
+
+    const rec = $(`#erec-${i}`);
+    const link = $(`#elink-${i}`);
+    if (rec) rec.classList.add("visible");
+    if (link) link.classList.add("visible");
+    await sleep(400);
+  }
+
+  btn.disabled = false;
+  btn.textContent = "Run Again";
+  running = false;
+}
+
+function loadScenario(key) {
+  if (running) return;
+  currentScenario = key;
+  const sc = SCENARIOS[key];
+
+  $$(".scenario-btn").forEach(b => b.classList.toggle("active", b.dataset.scenario === key));
+
+  $("#verify-title").textContent = sc.title;
+  $("#result-banner").className = "result-banner";
+  $("#result-banner").style.display = "none";
+  $("#run-btn").textContent = "Run Verification";
+  $("#run-btn").disabled = false;
+
+  renderAgents(sc.agents);
+  renderDelegation(sc.delegation);
+  renderSteps(sc.steps);
+  renderEvidence(sc.evidence);
+}
+
+$$(".scenario-btn").forEach(btn => {
+  btn.addEventListener("click", () => loadScenario(btn.dataset.scenario));
+});
+$("#run-btn").addEventListener("click", runVerification);
+
+loadScenario("trade");
+</script>
+
+</body>
+</html>
