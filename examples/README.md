@@ -50,6 +50,37 @@ python3 -m http.server 8080 --directory examples
 
 **Key takeaway:** Non-technical stakeholders can click "Run Verification" and watch the system prove identity, check authorization, and block unauthorized actions in real time — all in under 50ms.
 
+### [marketing-campaign-demo.html](./marketing-campaign-demo.html)
+
+**What:** An interactive campaign simulator showing all 8 marketing agents collaborating on a real campaign — from strategy to content to measurable results.
+
+**How to run:**
+```bash
+open examples/marketing-campaign-demo.html
+# or serve it:
+python3 -m http.server 8080 --directory examples
+# then visit http://localhost:8080/marketing-campaign-demo.html
+```
+
+**Four campaign scenarios:**
+| Scenario | What It Demonstrates |
+|----------|---------------------|
+| Product Launch | 6-week SaaS launch across all channels — blog, threads, TikTok, Reddit, referral loops |
+| Viral Growth | Maximum reach in minimum time — trend-jacking, meme strategy, conversion funnels |
+| Community Trust | 6-month authentic Reddit presence — from silent observation to 24K karma and AMA |
+| App Store Launch | ASO, screenshot A/B testing, coordinated launch day, ratings strategy |
+
+**Features:**
+- Live agent roster showing which agents activate during each campaign phase
+- Animated campaign timeline tracking progress through strategy → content → launch → optimize
+- Content preview cards showing actual platform-specific outputs (tweets, TikTok scripts, Reddit posts, Instagram carousels, blog articles)
+- Real-time metrics dashboard with animated counters (impressions, engagement rate, sign-ups, CAC, viral K-factor)
+- Platform-specific styling (Twitter blue, Reddit orange, TikTok, Instagram, LinkedIn, App Store)
+
+**Agents featured:** Growth Hacker, Content Creator, Twitter Engager, TikTok Strategist, Instagram Curator, Reddit Community Builder, App Store Optimizer, Social Media Strategist
+
+**Key takeaway:** Non-technical stakeholders can watch 8 specialized agents collaborate on a campaign in real time — seeing the actual content each produces, which platforms it targets, and the measurable business results.
+
 ---
 
 ### [nexus-spatial-discovery.md](./nexus-spatial-discovery.md)

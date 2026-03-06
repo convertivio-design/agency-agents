@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Agency — Campaign Simulator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0d12;--s1:#14161e;--s2:#1c1f2b;--s3:#252938;
+  --bdr:#2a2e3f;--tx:#e8eaf0;--tx2:#7c8298;--tx3:#555a70;
+  --acc:#8b5cf6;--acc2:#a78bfa;--acc-bg:#8b5cf618;
+  --tw:#1DA1F2;--ig:#E4405F;--tt:#000;--rd:#FF4500;--li:#0A66C2;
+  --green:#10b981;--green-bg:#10b98118;--red:#ef4444;--yellow:#f59e0b;
+  --blue:#3b82f6;--pink:#ec4899;--orange:#f97316;
+  --r:12px;--rs:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--tx);line-height:1.55;min-height:100vh}
+
+header{text-align:center;padding:2.5rem 1.5rem 1.5rem;border-bottom:1px solid var(--bdr);background:linear-gradient(180deg,#1c1f2b40,transparent)}
+header h1{font-size:1.6rem;font-weight:700;letter-spacing:-.02em}
+header h1 span{background:linear-gradient(135deg,var(--acc),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header p{color:var(--tx2);margin-top:.4rem;font-size:.9rem;max-width:520px;margin-inline:auto}
+
+.wrap{max-width:1200px;margin:0 auto;padding:1.5rem}
+
+/* Metrics bar */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.metric{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rs);padding:.85rem;text-align:center}
+.metric .mv{font-size:1.35rem;font-weight:700;transition:color .3s}
+.metric .ml{font-size:.7rem;color:var(--tx2);margin-top:.15rem;text-transform:uppercase;letter-spacing:.04em}
+.metric .md{font-size:.68rem;margin-top:.25rem;font-weight:600}
+.md.up{color:var(--green)}.md.down{color:var(--red)}
+
+/* Scenario bar */
+.scenarios{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;margin-bottom:1.5rem}
+.sc-btn{padding:.5rem 1rem;border-radius:99px;border:1px solid var(--bdr);background:var(--s1);color:var(--tx2);cursor:pointer;font-size:.82rem;transition:all .2s}
+.sc-btn:hover{border-color:var(--acc);color:var(--tx)}
+.sc-btn.active{background:var(--acc);border-color:var(--acc);color:#fff}
+
+/* Layout grid */
+.main-grid{display:grid;grid-template-columns:260px 1fr;gap:1rem;margin-bottom:1.5rem}
+@media(max-width:768px){.main-grid{grid-template-columns:1fr}}
+
+/* Agent roster */
+.roster{display:flex;flex-direction:column;gap:.5rem}
+.roster-title{font-size:.8rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.25rem;font-weight:600}
+.agent{display:flex;align-items:center;gap:.65rem;background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rs);padding:.65rem .8rem;cursor:default;transition:all .35s;position:relative;overflow:hidden}
+.agent::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tx3);transition:background .3s}
+.agent.live::before{background:var(--green);box-shadow:0 0 8px var(--green)}
+.agent.live{border-color:#10b98140;background:var(--green-bg)}
+.agent-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.agent-info{min-width:0}
+.agent-info h4{font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-info p{font-size:.68rem;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-status{margin-left:auto;font-size:.6rem;padding:.15rem .45rem;border-radius:99px;font-weight:600;flex-shrink:0;text-transform:uppercase;letter-spacing:.03em}
+.agent-status.idle{background:var(--s3);color:var(--tx3)}
+.agent-status.active{background:var(--green-bg);color:var(--green)}
+
+/* Campaign feed */
+.feed-panel{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.feed-header{padding:.85rem 1rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.feed-header h2{font-size:.95rem;font-weight:600}
+.launch-btn{padding:.45rem 1.2rem;border-radius:99px;border:none;background:var(--acc);color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
+.launch-btn:hover{background:#7c3aed}
+.launch-btn:disabled{opacity:.35;cursor:not-allowed}
+.feed-body{padding:1rem;flex:1;overflow-y:auto;max-height:520px;display:flex;flex-direction:column;gap:.75rem}
+
+/* Content cards */
+.content-card{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rs);padding:.9rem 1rem;opacity:0;transform:translateY(12px);transition:all .4s ease}
+.content-card.show{opacity:1;transform:translateY(0)}
+.cc-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.55rem}
+.cc-plat{font-size:.68rem;padding:.18rem .5rem;border-radius:99px;font-weight:600;letter-spacing:.02em;color:#fff}
+.cc-plat.twitter{background:var(--tw)}.cc-plat.instagram{background:var(--ig)}
+.cc-plat.tiktok{background:#333}.cc-plat.reddit{background:var(--rd)}
+.cc-plat.linkedin{background:var(--li)}.cc-plat.appstore{background:var(--blue)}
+.cc-plat.blog{background:var(--orange)}.cc-plat.cross{background:var(--acc)}
+.cc-agent{font-size:.72rem;color:var(--tx2)}
+.cc-body{font-size:.83rem;line-height:1.5}
+.cc-body .hashtag{color:var(--acc2)}
+.cc-body .mention{color:var(--blue)}
+.cc-body .hook{color:var(--yellow);font-weight:600}
+.cc-body .metric-hl{color:var(--green);font-weight:600}
+.cc-stats{display:flex;gap:1rem;margin-top:.6rem;font-size:.7rem;color:var(--tx2)}
+.cc-stats span{display:flex;align-items:center;gap:.25rem}
+
+/* Timeline */
+.timeline{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:1rem;margin-bottom:1.5rem}
+.timeline h2{font-size:.95rem;font-weight:600;margin-bottom:.85rem}
+.tl-track{display:flex;gap:0;overflow-x:auto;padding-bottom:.5rem;position:relative}
+.tl-phase{flex-shrink:0;width:200px;position:relative;padding:.6rem .75rem;border-left:2px solid var(--bdr);transition:border-color .3s}
+.tl-phase.active{border-color:var(--acc)}
+.tl-phase.done{border-color:var(--green)}
+.tl-phase .ph-label{font-size:.7rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.tl-phase .ph-name{font-size:.82rem;font-weight:600;margin-top:.2rem}
+.tl-phase .ph-agents{font-size:.68rem;color:var(--tx2);margin-top:.25rem}
+.tl-phase .ph-dot{position:absolute;left:-5px;top:.75rem;width:8px;height:8px;border-radius:50%;background:var(--bdr);transition:background .3s,box-shadow .3s}
+.tl-phase.active .ph-dot{background:var(--acc);box-shadow:0 0 8px var(--acc)}
+.tl-phase.done .ph-dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Marketing <span>Campaign Simulator</span></h1>
+  <p>Watch 8 specialized agents collaborate on a real campaign — from strategy to content to results.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="scenarios" id="scenarios"></div>
+
+  <div class="timeline" id="timeline-section">
+    <h2>Campaign Timeline</h2>
+    <div class="tl-track" id="tl-track"></div>
+  </div>
+
+  <div class="main-grid">
+    <div>
+      <div class="roster-title">Agent Roster</div>
+      <div class="roster" id="roster"></div>
+    </div>
+    <div class="feed-panel">
+      <div class="feed-header">
+        <h2 id="feed-title">Campaign Feed</h2>
+        <button class="launch-btn" id="launch-btn">Launch Campaign</button>
+      </div>
+      <div class="feed-body" id="feed-body">
+        <div style="text-align:center;color:var(--tx3);padding:3rem 1rem;font-size:.88rem">
+          Choose a scenario and hit <strong>Launch Campaign</strong> to see the agents in action.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const AGENTS = [
+  {id:"growth",    name:"Growth Hacker",      icon:"\ud83d\ude80",bg:"#8b5cf620",role:"Acquisition & experiments"},
+  {id:"content",   name:"Content Creator",     icon:"\u270d\ufe0f",bg:"#f59e0b20",role:"Multi-platform content"},
+  {id:"twitter",   name:"Twitter Engager",     icon:"\ud83d\udc26",bg:"#1DA1F220",role:"Real-time engagement"},
+  {id:"tiktok",    name:"TikTok Strategist",   icon:"\ud83c\udfb5",bg:"#ec489920",role:"Viral short-form video"},
+  {id:"instagram", name:"Instagram Curator",   icon:"\ud83d\udcf8",bg:"#E4405F20",role:"Visual storytelling"},
+  {id:"reddit",    name:"Reddit Builder",      icon:"\ud83e\udd16",bg:"#FF450020",role:"Community trust"},
+  {id:"aso",       name:"App Store Optimizer",  icon:"\ud83d\udcf1",bg:"#3b82f620",role:"Store discoverability"},
+  {id:"social",    name:"Social Strategist",    icon:"\ud83c\udfaf",bg:"#10b98120",role:"Cross-platform strategy"},
+];
+
+const SCENARIOS = {
+  launch: {
+    name: "Product Launch",
+    desc: "SaaS tool launch across all channels",
+    metrics: [
+      {label:"Impressions",start:0,end:2400000,fmt:"num",delta:"+340%"},
+      {label:"Engagement Rate",start:0,end:8.2,fmt:"pct",delta:"+3.1pp"},
+      {label:"Sign-ups",start:0,end:12800,fmt:"num",delta:"+890%"},
+      {label:"CAC",start:0,end:18.40,fmt:"usd",delta:"-62%"},
+      {label:"Viral K-Factor",start:0,end:1.34,fmt:"dec",delta:">1.0 \u2713"},
+      {label:"Media Mentions",start:0,end:47,fmt:"num",delta:"+47 new"},
+    ],
+    phases: [
+      {label:"Week 1",name:"Strategy & Research",agents:["social","growth","content"],pct:0},
+      {label:"Week 2",name:"Content Production",agents:["content","tiktok","instagram"],pct:20},
+      {label:"Week 3",name:"Pre-Launch Buzz",agents:["twitter","reddit","tiktok"],pct:45},
+      {label:"Week 4",name:"Launch Day",agents:["growth","twitter","reddit","social"],pct:70},
+      {label:"Week 5-6",name:"Optimize & Scale",agents:["growth","aso","social"],pct:100},
+    ],
+    feed: [
+      {agent:"social",platform:"cross",title:"Social Strategist",text:"<span class='hook'>Campaign Brief:</span> 6-week launch for <span class='mention'>@NexusAI</span> — targeting dev teams & CTOs. Platform split: Twitter 35%, LinkedIn 25%, TikTok 20%, Reddit 15%, Instagram 5%. Core message: \"Ship AI agents in minutes, not months.\"",stats:{views:"—",eng:"—",shares:"—"}},
+      {agent:"content",platform:"blog",title:"Content Creator",text:"Published: \"<span class='hook'>Why Your AI Pipeline Is Slower Than It Should Be</span>\" — 2,800 words, 14 custom diagrams, SEO-optimized for 8 keywords. Reading time: 11 min. Distributed to email list (24K subscribers) and syndicated to Dev.to.",stats:{views:"18.4K",eng:"12%",shares:"842"}},
+      {agent:"growth",platform:"cross",title:"Growth Hacker",text:"<span class='hook'>Experiment #1: Referral Loop</span> — \"Invite 3 teammates, unlock Pro features for a month.\" Hypothesis: K-factor > 1.0 at 15% invite rate. Test group: 500 beta users. <span class='metric-hl'>Result: K=1.34, invite rate 22%</span>. Rolling to 100%.",stats:{views:"—",eng:"22%",shares:"—"}},
+      {agent:"twitter",platform:"twitter",title:"Twitter Engager",text:"<span class='hook'>\ud83e\uddf5 Thread: \"We spent 6 months building AI pipelines the hard way. Here's what we learned (and what we built instead).\"</span>\n\n1/ Every AI team hits the same wall: you've got 4 models, 3 APIs, and a prayer holding it together...\n\n<span class='hashtag'>#AIEngineering #DevTools #BuildInPublic</span>",stats:{views:"124K",eng:"8.4%",shares:"2.1K"}},
+      {agent:"tiktok",platform:"tiktok",title:"TikTok Strategist",text:"<span class='hook'>Hook (0-3s):</span> \"POV: Your boss asks you to build an AI pipeline by Friday\"\n\n<span class='mention'>Scene:</span> Developer staring at screen \u2192 montage of copy-pasting configs \u2192 discovers NexusAI \u2192 ships in 10 minutes \u2192 celebration\n\nSound: trending \"dramatic transformation\" audio\n<span class='hashtag'>#TechTok #AITools #DevLife #CodingHumor</span>",stats:{views:"340K",eng:"11.2%",shares:"8.4K"}},
+      {agent:"reddit",platform:"reddit",title:"Reddit Builder",text:"<span class='mention'>r/MachineLearning</span> — Posted educational deep-dive: \"<span class='hook'>A practical guide to agent orchestration patterns (with benchmarks)</span>\"\n\nRule: 90% value, 10% product. The post covers 5 orchestration patterns with pros/cons and real latency numbers. NexusAI mentioned once in the comparison table.\n\n<span class='metric-hl'>847 upvotes \u2022 94% ratio \u2022 126 comments</span>",stats:{views:"52K",eng:"94%",shares:"847"}},
+      {agent:"instagram",platform:"instagram",title:"Instagram Curator",text:"<span class='hook'>Carousel: \"AI Pipeline Architecture in 10 Slides\"</span>\n\nSlide 1: Bold title card (brand gradient)\nSlides 2-8: Clean diagrams with one concept each\nSlide 9: Before/after comparison\nSlide 10: CTA — \"Link in bio to try it free\"\n\nAesthetic: dark mode, neon accents, mono font\n<span class='hashtag'>#TechDesign #AIArchitecture #StartupLife</span>",stats:{views:"28K",eng:"6.8%",shares:"1.2K"}},
+      {agent:"growth",platform:"cross",title:"Growth Hacker",text:"<span class='hook'>Launch Day Results (24h):</span>\n\n\ud83d\udcc8 Sign-ups: <span class='metric-hl'>4,200</span> (target was 2,000)\n\ud83d\udcc8 Referral conversions: <span class='metric-hl'>1,180</span> (28% of sign-ups invited others)\n\ud83d\udcc8 Activation rate: <span class='metric-hl'>67%</span> (completed first pipeline)\n\ud83d\udcc8 CAC: <span class='metric-hl'>$18.40</span> (target was $30)\n\nTop channel: Twitter thread \u2192 38% of sign-ups. Scaling ad spend on winner.",stats:{views:"—",eng:"—",shares:"—"}},
+      {agent:"social",platform:"cross",title:"Social Strategist",text:"<span class='hook'>Week 6 Campaign Wrap:</span>\n\n\u2705 Total impressions: 2.4M across 5 platforms\n\u2705 12,800 sign-ups (640% over target)\n\u2705 8.2% avg engagement (industry avg: 3.1%)\n\u2705 47 organic media mentions\n\u2705 K-factor sustained at 1.34\n\nRecommendation: Shift 20% budget from Instagram to TikTok+Reddit based on CAC data. Extend referral program permanently.",stats:{views:"—",eng:"—",shares:"—"}},
+    ]
+  },
+  viral: {
+    name: "Viral Growth",
+    desc: "Maximum reach in minimum time",
+    metrics: [
+      {label:"Total Reach",start:0,end:8700000,fmt:"num",delta:"+1,200%"},
+      {label:"Engagement Rate",start:0,end:11.4,fmt:"pct",delta:"+6.3pp"},
+      {label:"Followers Gained",start:0,end:84000,fmt:"num",delta:"+84K new"},
+      {label:"Viral Posts",start:0,end:6,fmt:"num",delta:"6 over 100K"},
+      {label:"Earned Media Value",start:0,end:142000,fmt:"usd",delta:"$142K EMV"},
+      {label:"Brand Searches",start:0,end:31000,fmt:"num",delta:"+2,400%"},
+    ],
+    phases: [
+      {label:"Day 1-2",name:"Trend Scouting",agents:["tiktok","twitter","social"],pct:0},
+      {label:"Day 3-4",name:"Content Blitz",agents:["tiktok","content","instagram"],pct:25},
+      {label:"Day 5-7",name:"Engagement Wave",agents:["twitter","reddit","growth"],pct:55},
+      {label:"Week 2",name:"Amplify Winners",agents:["growth","social","tiktok"],pct:80},
+      {label:"Week 3",name:"Convert Attention",agents:["growth","content","aso"],pct:100},
+    ],
+    feed: [
+      {agent:"tiktok",platform:"tiktok",title:"TikTok Strategist",text:"<span class='hook'>Trend identified:</span> \"AI doing my job\" format trending — 47M views in 48 hours.\n\nPlan: Create 5 variations in 24 hours. Mix: 2 humor, 2 educational, 1 transformation.\n\nFirst video: \"I let AI write my marketing strategy. Here's what happened.\" — posted during peak hours (7-9pm EST).\n\n<span class='metric-hl'>Result: 1.2M views in 18 hours. 89% completion rate.</span>",stats:{views:"1.2M",eng:"14.2%",shares:"28K"}},
+      {agent:"twitter",platform:"twitter",title:"Twitter Engager",text:"<span class='hook'>Hot take dropped at 8:14am EST:</span>\n\n\"Unpopular opinion: 90% of AI startups are building features, not products.\n\nThe ones that win will be the ones that make AI invisible.\n\nYour users shouldn't know they're using AI. They should just know things work better.\"\n\n<span class='metric-hl'>4,800 retweets \u2022 18K likes \u2022 12M impressions</span>\n<span class='hashtag'>#AI #Startups #ProductThinking</span>",stats:{views:"12M",eng:"9.8%",shares:"4.8K"}},
+      {agent:"instagram",platform:"instagram",title:"Instagram Curator",text:"<span class='hook'>Reel: \"Corporate AI expectations vs reality\"</span>\n\nFormat: Split-screen comparison with trending audio\nLeft: Polished demo (\"Our AI pipeline\")\nRight: Reality (tangled cables, error messages, coffee)\n\nReposted by 3 tech meme accounts (combined 2.1M followers)\n<span class='metric-hl'>680K views \u2022 42K likes \u2022 3.2K saves</span>",stats:{views:"680K",eng:"12.1%",shares:"3.2K"}},
+      {agent:"reddit",platform:"reddit",title:"Reddit Builder",text:"<span class='mention'>r/ProgrammerHumor</span> — Meme post: diagram of \"what my manager thinks AI deployment looks like\" vs \"what it actually looks like\"\n\nAuthentic, not branded. Account has 8,200 karma from months of genuine contribution.\n\n<span class='metric-hl'>12.4K upvotes \u2022 97% ratio \u2022 Frontpage for 6 hours</span>\n\nNatural brand mention in comments when asked \"what tool is that?\" — 340 click-throughs.",stats:{views:"1.8M",eng:"97%",shares:"12.4K"}},
+      {agent:"content",platform:"blog",title:"Content Creator",text:"<span class='hook'>Newsjacking:</span> Major AI company announces pricing change. We publish \"<span class='hook'>3 alternatives that won't break your budget</span>\" within 4 hours.\n\nSEO play: targeting \"[competitor] alternative\" — search volume spiked 800% today.\n\n<span class='metric-hl'>Article ranks #3 within 48 hours. 31K organic visits in first week.</span>",stats:{views:"31K",eng:"8.2%",shares:"1.4K"}},
+      {agent:"growth",platform:"cross",title:"Growth Hacker",text:"<span class='hook'>Viral conversion funnel:</span>\n\nTikTok (1.2M views) \u2192 Bio link (86K clicks, 7.2% CTR) \u2192 Landing page (24K sign-ups, 28% conversion) \u2192 Activation (16K, 67%)\n\nTop experiment: Adding \"as seen on TikTok\" badge to landing page increased conversion by <span class='metric-hl'>34%</span>. Social proof from virality compounds.",stats:{views:"—",eng:"28%",shares:"—"}},
+      {agent:"social",platform:"cross",title:"Social Strategist",text:"<span class='hook'>Viral Campaign Report:</span>\n\n\ud83d\udcc8 Total reach: <span class='metric-hl'>8.7M</span> across platforms\n\ud83d\udcc8 6 posts exceeded 100K views\n\ud83d\udcc8 84K new followers (TikTok: 52K, Twitter: 18K, Instagram: 14K)\n\ud83d\udcc8 Earned media value: $142K\n\ud83d\udcc8 Brand search volume up 2,400%\n\nKey learning: Humor + education outperforms pure promotion 8:1. Reddit provides highest-quality traffic (lowest bounce rate, highest activation)."},
+    ]
+  },
+  community: {
+    name: "Community Trust",
+    desc: "Build authentic brand presence",
+    metrics: [
+      {label:"Community Karma",start:0,end:24800,fmt:"num",delta:"+24.8K earned"},
+      {label:"Avg Upvote Ratio",start:0,end:92,fmt:"pct",delta:"92% positive"},
+      {label:"Trusted Subreddits",start:0,end:12,fmt:"num",delta:"12 communities"},
+      {label:"AMA Attendees",start:0,end:3400,fmt:"num",delta:"3.4K live"},
+      {label:"Organic Mentions",start:0,end:89,fmt:"num",delta:"89 brand mentions"},
+      {label:"Sentiment Score",start:0,end:94,fmt:"pct",delta:"94% positive"},
+    ],
+    phases: [
+      {label:"Month 1",name:"Listen & Learn",agents:["reddit","social","content"],pct:0},
+      {label:"Month 2",name:"Value-First Content",agents:["reddit","content","twitter"],pct:20},
+      {label:"Month 3",name:"Community Integration",agents:["reddit","twitter","instagram"],pct:45},
+      {label:"Month 4",name:"Thought Leadership",agents:["reddit","content","social"],pct:75},
+      {label:"Month 5-6",name:"Advocate Network",agents:["reddit","growth","social"],pct:100},
+    ],
+    feed: [
+      {agent:"reddit",platform:"reddit",title:"Reddit Builder",text:"<span class='hook'>Phase 1: Silent observation</span>\n\nSpent 30 days reading, upvoting, and learning community norms in:\n\u2022 r/MachineLearning (2.8M members)\n\u2022 r/artificial (420K)\n\u2022 r/LocalLLaMA (380K)\n\u2022 r/SideProject (210K)\n\nMapped: top contributors, posting patterns, what gets downvoted, moderator preferences. Zero posts. Zero comments. Just listening.",stats:{views:"—",eng:"—",shares:"—"}},
+      {agent:"content",platform:"blog",title:"Content Creator",text:"<span class='hook'>Value-first content plan:</span>\n\nCreated 12 educational posts — zero product mentions:\n\n\u2022 \"Benchmarking 7 open-source orchestration frameworks\" (r/MachineLearning)\n\u2022 \"Complete guide to agent memory patterns\" (r/LocalLLaMA)\n\u2022 \"How I reduced my AI infra costs by 60%\" (r/SideProject)\n\nAll posts include original benchmarks, code samples, and honest pros/cons.\n<span class='metric-hl'>Combined: 4,200 upvotes, 340 comments</span>",stats:{views:"86K",eng:"91%",shares:"4.2K"}},
+      {agent:"reddit",platform:"reddit",title:"Reddit Builder",text:"<span class='hook'>Comment strategy working:</span>\n\n200+ helpful comments across 12 subreddits. Every comment answers a specific question with code examples or benchmarks.\n\nExample: Someone asked \"how do I handle agent state between calls?\" — wrote a 400-word answer with 3 patterns and trade-offs.\n\n<span class='metric-hl'>Account karma: 8,200 \u2022 \"Helpful\" flair in 3 subreddits</span>\n\nProduct mentioned only when directly relevant and genuinely helpful.",stats:{views:"—",eng:"96%",shares:"—"}},
+      {agent:"twitter",platform:"twitter",title:"Twitter Engager",text:"<span class='hook'>Thought leadership thread:</span>\n\n\"I've reviewed 500+ Reddit posts about AI agent problems.\n\nHere are the 7 patterns that keep coming up — and what actually works.\n\n(Sourced from real community discussions, credited every contributor.)\"\n\n<span class='metric-hl'>Thread: 2.4K retweets \u2022 8.1K likes</span>\nReddit community appreciated the credit — several top contributors followed back.",stats:{views:"890K",eng:"7.2%",shares:"2.4K"}},
+      {agent:"reddit",platform:"reddit",title:"Reddit Builder",text:"<span class='hook'>AMA: \"We're the team behind NexusAI. Ask us anything about agent orchestration.\"</span>\n\nr/MachineLearning — approved by moderators after 3 months of genuine contribution.\n\nRules we set for ourselves:\n\u2022 Answer every question, including hard ones\n\u2022 Admit limitations honestly\n\u2022 Share roadmap openly\n\u2022 No corporate-speak\n\n<span class='metric-hl'>3,400 participants \u2022 287 questions answered \u2022 94% upvote ratio</span>",stats:{views:"124K",eng:"94%",shares:"1.8K"}},
+      {agent:"social",platform:"cross",title:"Social Strategist",text:"<span class='hook'>6-Month Community Report:</span>\n\n\u2705 24,800 karma earned organically\n\u2705 Trusted contributor in 12 subreddits\n\u2705 89 organic brand mentions by community members (not us)\n\u2705 94% positive sentiment\n\u2705 47% of trial sign-ups cite \"saw on Reddit\" or \"community recommendation\"\n\nKey learning: The 3-month investment in pure value before any product mention generated 5x more sign-ups than a direct launch campaign would have."},
+    ]
+  },
+  appstore: {
+    name: "App Store Launch",
+    desc: "Maximize downloads & ratings",
+    metrics: [
+      {label:"Daily Downloads",start:0,end:3200,fmt:"num",delta:"+3,200/day"},
+      {label:"Store Rank",start:0,end:14,fmt:"rank",delta:"#14 Productivity"},
+      {label:"Conversion Rate",start:0,end:38,fmt:"pct",delta:"+22pp vs avg"},
+      {label:"Avg Rating",start:0,end:4.8,fmt:"dec",delta:"\u2605 4.8/5.0"},
+      {label:"Featured In",start:0,end:3,fmt:"num",delta:"3 collections"},
+      {label:"Cost Per Install",start:0,end:1.20,fmt:"usd",delta:"-71% vs avg"},
+    ],
+    phases: [
+      {label:"Week 1-2",name:"Store Optimization",agents:["aso","content","social"],pct:0},
+      {label:"Week 3",name:"Visual Assets",agents:["aso","instagram","content"],pct:25},
+      {label:"Week 4",name:"Pre-Launch Buzz",agents:["twitter","tiktok","reddit"],pct:50},
+      {label:"Launch Day",name:"Coordinated Launch",agents:["growth","aso","social","twitter"],pct:80},
+      {label:"Week 6-8",name:"Ratings & Iteration",agents:["aso","growth","social"],pct:100},
+    ],
+    feed: [
+      {agent:"aso",platform:"appstore",title:"App Store Optimizer",text:"<span class='hook'>Keyword Research Complete:</span>\n\nPrimary keywords (high volume, medium competition):\n\u2022 \"AI assistant\" — 62K monthly searches\n\u2022 \"AI agent builder\" — 8.4K (growing 40% MoM)\n\u2022 \"workflow automation\" — 41K\n\nLong-tail targets:\n\u2022 \"AI pipeline builder\" — 2.1K (low competition, high intent)\n\u2022 \"no code AI tools\" — 12K\n\nTitle: \"NexusAI: Build AI Agents Fast\"\nSubtitle: \"No-Code AI Pipeline Builder\"",stats:{views:"—",eng:"—",shares:"—"}},
+      {agent:"aso",platform:"appstore",title:"App Store Optimizer",text:"<span class='hook'>Screenshot Strategy (A/B Test):</span>\n\nVariant A: Feature-focused (each screen = one feature)\nVariant B: Outcome-focused (each screen = a result)\n\n<span class='metric-hl'>Result: Variant B wins — 34% higher conversion</span>\n\nFinal sequence:\n1. \"Ship AI agents in 10 minutes\" (hero shot)\n2. \"Drag & drop pipeline builder\" (product)\n3. \"Real-time monitoring\" (dashboard)\n4. \"Trusted by 500+ teams\" (social proof)\n5. \"Free to start\" (CTA)",stats:{views:"—",eng:"34%",shares:"—"}},
+      {agent:"tiktok",platform:"tiktok",title:"TikTok Strategist",text:"<span class='hook'>App preview video (15s):</span>\n\n0-3s: \"What if building AI agents was as easy as ordering coffee?\"\n3-8s: Finger tapping through the app — drag, connect, deploy\n8-12s: Dashboard showing real results: \"2,400 tasks automated this week\"\n12-15s: \"Download free — link in bio\"\n\nSound: upbeat lo-fi trending audio\n<span class='metric-hl'>280K views \u2022 3.1K app store clicks from bio</span>",stats:{views:"280K",eng:"9.4%",shares:"4.2K"}},
+      {agent:"twitter",platform:"twitter",title:"Twitter Engager",text:"<span class='hook'>Launch tweet:</span>\n\n\"6 months ago we couldn't find an AI tool that didn't require a PhD to set up.\n\nSo we built one.\n\n<span class='mention'>@NexusAI</span> is live on the App Store today.\n\nDrag. Connect. Deploy. That's it.\n\nFree to start. No credit card.\n\n\u2193\"\n\n<span class='metric-hl'>3.2K retweets \u2022 12K likes \u2022 Picked up by TechCrunch</span>",stats:{views:"2.1M",eng:"8.8%",shares:"3.2K"}},
+      {agent:"growth",platform:"cross",title:"Growth Hacker",text:"<span class='hook'>Launch Day Tactics:</span>\n\n1. <span class='metric-hl'>Product Hunt launch</span> — #2 Product of the Day (1,840 upvotes)\n2. <span class='metric-hl'>Coordinated social</span> — all platforms posted within 30-min window\n3. <span class='metric-hl'>Early reviewer push</span> — 200 beta users prompted for App Store review\n4. <span class='metric-hl'>Press embargo lift</span> — TechCrunch, The Verge, Hacker News simultaneously\n\nResult: 3,200 downloads on day 1. Ranked #14 in Productivity.",stats:{views:"—",eng:"—",shares:"—"}},
+      {agent:"social",platform:"cross",title:"Social Strategist",text:"<span class='hook'>8-Week App Launch Report:</span>\n\n\u2705 3,200 daily downloads (stabilized)\n\u2705 #14 in Productivity (peaked at #8)\n\u2705 4.8 star rating (1,240 reviews)\n\u2705 38% store page conversion (industry avg: 16%)\n\u2705 Featured in \"New Apps We Love\" and 2 category collections\n\u2705 CPI: $1.20 (industry avg: $4.08)\n\nNext: Localize screenshots for DE, JP, BR — projected +40% international downloads."},
+    ]
+  },
+};
+
+let current = "launch";
+let isRunning = false;
+
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function fmtNum(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(1) + "M";
+  if (n >= 1e3) return (n/1e3).toFixed(1) + "K";
+  return Math.round(n).toLocaleString();
+}
+
+function fmtMetric(v, fmt) {
+  if (fmt === "num") return fmtNum(v);
+  if (fmt === "pct") return v.toFixed(1) + "%";
+  if (fmt === "usd") return "$" + v.toFixed(2);
+  if (fmt === "dec") return v.toFixed(2);
+  if (fmt === "rank") return "#" + Math.round(v);
+  return String(Math.round(v));
+}
+
+function renderMetrics(sc) {
+  $("#metrics").innerHTML = sc.metrics.map((m, i) => `
+    <div class="metric">
+      <div class="mv" id="mv-${i}">—</div>
+      <div class="ml">${m.label}</div>
+      <div class="md" id="md-${i}"></div>
+    </div>`).join("");
+}
+
+function renderScenarios() {
+  $("#scenarios").innerHTML = Object.entries(SCENARIOS).map(([k, v]) =>
+    `<button class="sc-btn${k===current?' active':''}" data-sc="${k}">${v.name}</button>`
+  ).join("");
+  $$(".sc-btn").forEach(b => b.addEventListener("click", () => { if (!isRunning) loadScenario(b.dataset.sc); }));
+}
+
+function renderRoster() {
+  $("#roster").innerHTML = AGENTS.map(a => `
+    <div class="agent" id="ag-${a.id}">
+      <div class="agent-av" style="background:${a.bg}">${a.icon}</div>
+      <div class="agent-info"><h4>${a.name}</h4><p>${a.role}</p></div>
+      <div class="agent-status idle" id="ag-st-${a.id}">Idle</div>
+    </div>`).join("");
+}
+
+function renderTimeline(phases) {
+  $("#tl-track").innerHTML = phases.map((p, i) => `
+    <div class="tl-phase" id="ph-${i}">
+      <div class="ph-dot"></div>
+      <div class="ph-label">${p.label}</div>
+      <div class="ph-name">${p.name}</div>
+      <div class="ph-agents">${p.agents.map(id => AGENTS.find(a=>a.id===id)?.icon || "").join(" ")}</div>
+    </div>`).join("");
+}
+
+function setAgentLive(id, live) {
+  const el = $(`#ag-${id}`);
+  const st = $(`#ag-st-${id}`);
+  if (!el) return;
+  el.classList.toggle("live", live);
+  st.className = `agent-status ${live ? "active" : "idle"}`;
+  st.textContent = live ? "Active" : "Idle";
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function animateValue(elId, start, end, fmt, duration) {
+  const el = $(elId);
+  if (!el) return;
+  const startTime = performance.now();
+  function tick(now) {
+    const t = Math.min((now - startTime) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = fmtMetric(start + (end - start) * ease, fmt);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+async function runCampaign() {
+  if (isRunning) return;
+  isRunning = true;
+  const btn = $("#launch-btn");
+  btn.disabled = true;
+  btn.textContent = "Running\u2026";
+  const sc = SCENARIOS[current];
+  const feed = $("#feed-body");
+  feed.innerHTML = "";
+
+  AGENTS.forEach(a => setAgentLive(a.id, false));
+
+  let phaseIdx = 0;
+
+  for (let i = 0; i < sc.feed.length; i++) {
+    const item = sc.feed[i];
+    const phasePct = (i / sc.feed.length) * 100;
+
+    while (phaseIdx < sc.phases.length && sc.phases[phaseIdx].pct <= phasePct) {
+      const ph = $(`#ph-${phaseIdx}`);
+      if (phaseIdx > 0) {
+        const prev = $(`#ph-${phaseIdx - 1}`);
+        if (prev) { prev.classList.remove("active"); prev.classList.add("done"); }
+      }
+      if (ph) ph.classList.add("active");
+      sc.phases[phaseIdx].agents.forEach(id => setAgentLive(id, true));
+      phaseIdx++;
+    }
+
+    setAgentLive(item.agent, true);
+
+    const card = document.createElement("div");
+    card.className = "content-card";
+    card.innerHTML = `
+      <div class="cc-top">
+        <span class="cc-plat ${item.platform}">${item.platform.toUpperCase()}</span>
+        <span class="cc-agent">${AGENTS.find(a=>a.id===item.agent)?.icon || ""} ${item.title}</span>
+      </div>
+      <div class="cc-body">${item.text.replace(/\n/g, "<br>")}</div>
+      ${item.stats ? `<div class="cc-stats">
+        ${item.stats.views && item.stats.views !== "—" ? `<span>\ud83d\udc41 ${item.stats.views}</span>` : ""}
+        ${item.stats.eng && item.stats.eng !== "—" ? `<span>\u2764\ufe0f ${item.stats.eng}</span>` : ""}
+        ${item.stats.shares && item.stats.shares !== "—" ? `<span>\ud83d\udd01 ${item.stats.shares}</span>` : ""}
+      </div>` : ""}
+    `;
+    feed.appendChild(card);
+    await sleep(50);
+    card.classList.add("show");
+    feed.scrollTop = feed.scrollHeight;
+
+    const metricProgress = (i + 1) / sc.feed.length;
+    sc.metrics.forEach((m, mi) => {
+      animateValue(`#mv-${mi}`, m.start, m.start + (m.end - m.start) * metricProgress, m.fmt, 800);
+    });
+
+    await sleep(1200 + Math.random() * 600);
+  }
+
+  for (let pi = 0; pi < sc.phases.length; pi++) {
+    const ph = $(`#ph-${pi}`);
+    if (ph) { ph.classList.remove("active"); ph.classList.add("done"); }
+  }
+
+  sc.metrics.forEach((m, mi) => {
+    animateValue(`#mv-${mi}`, m.end * 0.95, m.end, m.fmt, 600);
+    const md = $(`#md-${mi}`);
+    if (md) { md.textContent = m.delta; md.className = "md up"; }
+  });
+
+  await sleep(400);
+  AGENTS.forEach(a => setAgentLive(a.id, false));
+
+  btn.disabled = false;
+  btn.textContent = "Run Again";
+  isRunning = false;
+}
+
+function loadScenario(key) {
+  current = key;
+  const sc = SCENARIOS[key];
+  $$(".sc-btn").forEach(b => b.classList.toggle("active", b.dataset.sc === key));
+  $("#feed-title").textContent = sc.desc;
+  renderMetrics(sc);
+  renderTimeline(sc.phases);
+  AGENTS.forEach(a => setAgentLive(a.id, false));
+  const btn = $("#launch-btn");
+  btn.disabled = false;
+  btn.textContent = "Launch Campaign";
+  $("#feed-body").innerHTML = `<div style="text-align:center;color:var(--tx3);padding:3rem 1rem;font-size:.88rem">Hit <strong>Launch Campaign</strong> to watch 8 agents execute the ${sc.name.toLowerCase()} playbook.</div>`;
+}
+
+renderScenarios();
+renderRoster();
+loadScenario("launch");
+$("#launch-btn").addEventListener("click", runCampaign);
+</script>
+</body>
+</html>
